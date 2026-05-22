@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Code Review Agent</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #3b82f6;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-secondary text-white flex flex-col h-full shadow-lg z-10">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-700">
+            <i class="fa-solid fa-robot text-primary text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-tight">CodeAgent</h1>
+        </div>
+        <nav class="flex-1 py-6 px-4 space-y-2">
+            <a href="#" class="flex items-center gap-3 bg-primary/20 text-blue-400 px-4 py-3 rounded-lg font-medium transition-colors">
+                <i class="fa-solid fa-code"></i> Manual Review
+            </a>
+            <a href="#" class="flex items-center gap-3 hover:bg-slate-800 px-4 py-3 rounded-lg font-medium transition-colors text-slate-300">
+                <i class="fa-solid fa-clock-rotate-left"></i> Recent Reviews
+            </a>
+            <a href="#" class="flex items-center gap-3 hover:bg-slate-800 px-4 py-3 rounded-lg font-medium transition-colors text-slate-300">
+                <i class="fa-solid fa-gear"></i> Settings
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-700 text-sm text-slate-400 text-center">
+            v1.0.0 &bull; Offline Mode
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-y-auto">
+        <header class="bg-white shadow-sm px-8 py-5 flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-slate-800">New Manual Review</h2>
+            <div class="flex items-center gap-4">
+                <select id="userStateSelect" class="bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 outline-none">
+                    <option value="">Anonymous (Max 50 lines)</option>
+                    <option value="test_trial">Trial User (5/day)</option>
+                    <option value="test_basic">Basic User (50/day)</option>
+                    <option value="test_pro">Pro User (Unlimited)</option>
+                </select>
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                    U
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-5xl mx-auto w-full space-y-8 pb-20">
+            
+            <!-- Input Section -->
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="mb-4">
+                    <label for="codeDiff" class="block text-sm font-semibold text-slate-700 mb-2">Paste Code Diff</label>
+                    <p class="text-sm text-slate-500 mb-4">Paste your raw Git diff or specific code snippet below for the AI to analyze.</p>
+                    <textarea id="codeDiff" rows="12" class="w-full font-mono text-sm p-4 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-y" placeholder="+ def example():&#10;+     print('Hello world!')"></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button id="analyzeBtn" class="bg-primary hover:bg-blue-600 text-white font-medium py-2.5 px-6 rounded-lg shadow-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Code
+                    </button>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <section id="loadingState" class="hidden flex-col items-center justify-center py-12 space-y-4">
+                <div class="spinner"></div>
+                <p class="text-slate-600 font-medium animate-pulse">AI is analyzing the code diff...</p>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsView" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4">AI Summary</h3>
+                    <p id="summaryText" class="text-slate-600 leading-relaxed"></p>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 px-1">Issues Found (<span id="issueCount">0</span>)</h3>
+                    <div id="issuesList" class="space-y-4">
+                        <!-- Issue cards will be dynamically injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error State -->
+            <section id="errorState" class="hidden bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fa-solid fa-circle-exclamation text-xl"></i>
+                    <h3 class="font-bold">Analysis Failed</h3>
+                </div>
+                <p id="errorMessage" class="text-sm">An error occurred while processing the request.</p>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const codeDiffInput = document.getElementById('codeDiff');
+        const loadingState = document.getElementById('loadingState');
+        const resultsView = document.getElementById('resultsView');
+        const errorState = document.getElementById('errorState');
+        
+        const summaryText = document.getElementById('summaryText');
+        const issueCount = document.getElementById('issueCount');
+        const issuesList = document.getElementById('issuesList');
+
+        analyzeBtn.addEventListener('click', async () => {
+            const code = codeDiffInput.value.trim();
+            const username = document.getElementById('userStateSelect').value;
+
+            if (!code) {
+                alert("Please paste a code diff first.");
+                return;
+            }
+
+            // Reset UI
+            resultsView.classList.add('hidden');
+            errorState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                // Call backend API
+                const response = await fetch('/api/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code_diff: code, username: username })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "An unexpected error occurred");
+                }
+
+                renderResults(data.review);
+            } catch (error) {
+                console.error(error);
+                if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+                    document.getElementById('errorMessage').textContent = "Network Error: Please check if your Python backend server is running in the terminal.";
+                } else {
+                    document.getElementById('errorMessage').textContent = error.message || "An unexpected error occurred.";
+                }
+                errorState.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+                analyzeBtn.disabled = false;
+                analyzeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        function renderResults(review) {
+            summaryText.textContent = review.summary || "No summary provided.";
+            
+            const issues = review.issues || [];
+            issueCount.textContent = issues.length;
+            issuesList.innerHTML = '';
+
+            if (issues.length === 0) {
+                issuesList.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 text-green-700 p-6 rounded-xl flex items-center gap-3">
+                        <i class="fa-solid fa-circle-check text-xl"></i>
+                        <span class="font-medium">Great job! The AI found no issues in the provided code.</span>
+                    </div>
+                `;
+            } else {
+                issues.forEach(issue => {
+                    const card = document.createElement('div');
+                    
+                    // Determine color coding
+                    let colorTheme = { border: 'border-slate-200', bg: 'bg-slate-50', icon: 'fa-info-circle', text: 'text-slate-600', badge: 'bg-slate-100 text-slate-700' };
+                    if (issue.severity === 'Critical') {
+                        colorTheme = { border: 'border-red-200', bg: 'bg-white', icon: 'fa-circle-xmark text-red-500', text: 'text-red-700', badge: 'bg-red-100 text-red-800 border-red-200' };
+                    } else if (issue.severity === 'Warning') {
+                        colorTheme = { border: 'border-orange-200', bg: 'bg-white', icon: 'fa-triangle-exclamation text-orange-500', text: 'text-orange-800', badge: 'bg-orange-100 text-orange-800 border-orange-200' };
+                    } else if (issue.severity === 'Style') {
+                        colorTheme = { border: 'border-blue-200', bg: 'bg-white', icon: 'fa-code text-blue-500', text: 'text-blue-800', badge: 'bg-blue-100 text-blue-800 border-blue-200' };
+                    }
+
+                    card.className = `rounded-xl border ${colorTheme.border} ${colorTheme.bg} overflow-hidden shadow-sm`;
+                    
+                    card.innerHTML = `
+                        <div class="p-5">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid ${colorTheme.icon} text-lg"></i>
+                                    <h4 class="font-bold text-slate-800 text-lg">${issue.category}</h4>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-md border ${colorTheme.badge}">${issue.severity}</span>
+                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-600">Line ${issue.line_number}</span>
+                                </div>
+                            </div>
+                            <p class="text-slate-700 mb-4">${issue.description}</p>
+                            
+                            <div class="bg-slate-900 rounded-lg p-4 relative group">
+                                <div class="absolute top-0 right-0 px-3 py-1 bg-slate-800 text-xs text-slate-400 font-mono rounded-bl-lg rounded-tr-lg">Suggested Fix</div>
+                                <pre class="font-mono text-sm text-green-400 overflow-x-auto whitespace-pre-wrap mt-2"><code>${escapeHtml(issue.suggested_fix)}</code></pre>
+                            </div>
+                        </div>
+                    `;
+                    issuesList.appendChild(card);
+                });
+            }
+
+            resultsView.classList.remove('hidden');
+        }
+
+        // Utility to prevent XSS in rendering
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

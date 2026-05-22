@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Code Review Agent | Ship secure, clean code faster</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#0f172a',
+                        accent: '#10b981'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .bento-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-secondary text-white font-sans antialiased overflow-x-hidden">
+
+    <!-- Navbar -->
+    <nav class="container mx-auto px-6 py-6 flex items-center justify-between z-50 relative">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-robot text-primary text-3xl"></i>
+            <span class="text-2xl font-bold tracking-tight">CodeAgent AI</span>
+        </div>
+        <div class="hidden md:flex gap-8 font-medium text-slate-300">
+            <a href="#features" class="hover:text-white transition-colors">Features</a>
+            <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
+            <a href="#" class="hover:text-white transition-colors">Docs</a>
+        </div>
+        <div>
+            <button id="navLoginBtn" class="bg-primary hover:bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold transition-colors">
+                Login / Sign Up
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-20 pb-32 flex flex-col items-center justify-center text-center px-6">
+        <!-- Background glows -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+        
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-sm font-medium text-blue-400 mb-8">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Gemini 2.5 Pro Powered
+        </div>
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+            Your Senior Engineer, <br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-accent">Available 24/7.</span>
+        </h1>
+        <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Automate your PR reviews, catch critical security flaws, and enforce clean coding patterns in seconds.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+            <a href="/dashboard" class="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 rounded-full font-bold text-lg transition-transform hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                Start Free Trial
+            </a>
+            <a href="#features" class="glass-panel px-8 py-4 rounded-full font-bold text-lg hover:bg-white/10 transition-colors">
+                View Features
+            </a>
+        </div>
+        <p class="mt-4 text-sm text-slate-500">No credit card required &bull; 14-day free trial</p>
+    </section>
+
+    <!-- Features Bento Grid -->
+    <section id="features" class="py-24 bg-slate-900 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">Zero-Fluff Analysis</h2>
+                <p class="text-slate-400 text-lg max-w-2xl mx-auto">Our AI is strictly trained to avoid conversational filler and only deliver actionable code improvements.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Security -->
+                <div class="bento-card bg-slate-800 border border-slate-700 rounded-3xl p-8 md:col-span-2 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-8 text-red-500/10 group-hover:text-red-500/20 transition-colors">
+                        <i class="fa-solid fa-shield-halved text-9xl"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="bg-red-500/20 text-red-400 w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-6">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Critical Security Checking</h3>
+                        <p class="text-slate-400 max-w-md">Instantly detect SQL injection vulnerabilities, insecure secret handling, and unsafe eval() calls before they reach production.</p>
+                    </div>
+                </div>
+
+                <!-- Performance -->
+                <div class="bento-card bg-slate-800 border border-slate-700 rounded-3xl p-8">
+                    <div class="bg-blue-500/20 text-blue-400 w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-6">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Performance Ops</h3>
+                    <p class="text-slate-400">Highlight O(N²) operations inside loops or redundant database queries.</p>
+                </div>
+
+                <!-- Styling -->
+                <div class="bento-card bg-slate-800 border border-slate-700 rounded-3xl p-8">
+                    <div class="bg-accent/20 text-accent w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-6">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Pythonic Patterns</h3>
+                    <p class="text-slate-400">Suggest list comprehensions, context managers, and structural pattern matching.</p>
+                </div>
+
+                <!-- Integration -->
+                <div class="bento-card bg-slate-800 border border-slate-700 rounded-3xl p-8 md:col-span-2">
+                    <div class="flex items-center gap-6">
+                        <i class="fa-brands fa-github text-6xl text-slate-600"></i>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Native GitHub Webhooks</h3>
+                            <p class="text-slate-400">Connect your repositories and get automated PR reviews posted directly as comments.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 px-6 relative">
+        <div class="container mx-auto max-w-5xl">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-bold mb-6">Simple, Transparent Pricing</h2>
+                
+                <!-- Toggle -->
+                <div class="inline-flex bg-slate-800 p-1 rounded-full border border-slate-700">
+                    <button class="px-6 py-2 rounded-full bg-primary text-white font-semibold text-sm shadow-sm" id="btnMonthly">Monthly</button>
+                    <button class="px-6 py-2 rounded-full text-slate-400 font-semibold text-sm hover:text-white transition-colors" id="btnAnnual">Annual <span class="text-accent text-xs ml-1">-20%</span></button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Basic Plan -->
+                <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 flex flex-col">
+                    <h3 class="text-2xl font-bold mb-2">Basic</h3>
+                    <p class="text-slate-400 mb-6">For individual developers and freelancers.</p>
+                    <div class="mb-8">
+                        <span class="text-5xl font-extrabold" id="priceBasic">$9</span>
+                        <span class="text-slate-400" id="termBasic">/mo</span>
+                    </div>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> 50 Reviews per day</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> Standard File Sizes</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> Manual Dashboard Access</li>
+                    </ul>
+                    <a href="/dashboard" class="block text-center w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-bold transition-colors">Get Started for Free</a>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="bg-gradient-to-b from-primary/20 to-slate-800 border border-primary/50 rounded-3xl p-8 flex flex-col relative shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+                    <div class="absolute top-0 right-8 -translate-y-1/2 bg-gradient-to-r from-blue-400 to-primary px-4 py-1 rounded-full text-sm font-bold shadow-lg">Most Popular</div>
+                    <h3 class="text-2xl font-bold mb-2">Pro</h3>
+                    <p class="text-slate-400 mb-6">For professional teams scaling their codebases.</p>
+                    <div class="mb-8">
+                        <span class="text-5xl font-extrabold" id="pricePro">$24</span>
+                        <span class="text-slate-400" id="termPro">/mo</span>
+                    </div>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> <strong>Unlimited</strong> Reviews</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> Priority AI Queue</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> GitHub PR Integration</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-accent"></i> Advanced Security Checks</li>
+                    </ul>
+                    <a href="/dashboard" class="block text-center w-full bg-primary hover:bg-blue-600 py-3 rounded-xl font-bold transition-colors text-white shadow-lg shadow-primary/30">Get Started for Free</a>
+                </div>
+            </div>
+            <p class="text-center mt-8 text-slate-500">All plans include a 14-day free trial (Default Tier: 5 reviews/day).</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-12 px-6 text-center text-slate-500">
+        <div class="flex items-center justify-center gap-2 mb-4">
+            <i class="fa-solid fa-robot text-slate-400"></i>
+            <span class="font-bold text-slate-300">CodeAgent AI</span>
+        </div>
+        <p>&copy; 2026 Smart Code Review Agent. All rights reserved.</p>
+    </footer>
+
+    <!-- Localization & Pricing Logic -->
+    <script>
+        // Pricing Data
+        const pricing = {
+            USD: { basic: { mo: 9, yr: 86 }, pro: { mo: 24, yr: 230 }, symbol: '$' },
+            INR: { basic: { mo: 499, yr: 4790 }, pro: { mo: 1999, yr: 19190 }, symbol: '₹' }
+        };
+
+        let currentCurrency = 'USD';
+        let isAnnual = false;
+
+        // Geolocation Check
+        function detectCurrency() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') {
+                    currentCurrency = 'INR';
+                }
+            } catch (e) {
+                console.warn('Could not detect timezone, defaulting to USD');
+            }
+            updatePricingUI();
+        }
+
+        // Update DOM
+        function updatePricingUI() {
+            const data = pricing[currentCurrency];
+            const period = isAnnual ? 'yr' : 'mo';
+            
+            document.getElementById('priceBasic').innerText = data.symbol + data.basic[period];
+            document.getElementById('pricePro').innerText = data.symbol + data.pro[period];
+            
+            document.getElementById('termBasic').innerText = isAnnual ? '/yr' : '/mo';
+            document.getElementById('termPro').innerText = isAnnual ? '/yr' : '/mo';
+        }
+
+        // Toggle Listeners
+        const btnMo = document.getElementById('btnMonthly');
+        const btnYr = document.getElementById('btnAnnual');
+
+        btnMo.addEventListener('click', () => {
+            isAnnual = false;
+            btnMo.className = "px-6 py-2 rounded-full bg-primary text-white font-semibold text-sm shadow-sm";
+            btnYr.className = "px-6 py-2 rounded-full text-slate-400 font-semibold text-sm hover:text-white transition-colors";
+            updatePricingUI();
+        });
+
+        btnYr.addEventListener('click', () => {
+            isAnnual = true;
+            btnYr.className = "px-6 py-2 rounded-full bg-primary text-white font-semibold text-sm shadow-sm";
+            btnMo.className = "px-6 py-2 rounded-full text-slate-400 font-semibold text-sm hover:text-white transition-colors";
+            updatePricingUI();
+        });
+
+        // Init
+        detectCurrency();
+    </script>
+
+    <!-- Login Modal Overlay -->
+    <div id="loginModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-md w-full shadow-2xl relative transform transition-all">
+            <button id="closeModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="text-center mb-8">
+                <i class="fa-solid fa-robot text-primary text-4xl mb-4"></i>
+                <h3 class="text-2xl font-bold text-white mb-2">Welcome to CodeAgent AI</h3>
+                <p class="text-slate-400 text-sm">Sign in to start your 14-day free trial and elevate your code reviews.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <a href="/auth/login/github" class="flex items-center justify-center gap-3 w-full bg-[#24292e] hover:bg-[#2f363d] text-white py-3.5 rounded-xl font-semibold transition-colors border border-slate-700">
+                    <i class="fa-brands fa-github text-xl"></i>
+                    Continue with GitHub
+                </a>
+                <a href="#" class="flex items-center justify-center gap-3 w-full bg-white hover:bg-slate-100 text-slate-900 py-3.5 rounded-xl font-semibold transition-colors border border-slate-200" onclick="alert('Google Auth coming soon!')">
+                    <i class="fa-brands fa-google text-xl text-blue-500"></i>
+                    Continue with Google
+                </a>
+            </div>
+            
+            <p class="text-center text-xs text-slate-500 mt-6">
+                By continuing, you agree to our Terms of Service and Privacy Policy.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Modal Logic
+        const navLoginBtn = document.getElementById('navLoginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        function toggleModal() {
+            loginModal.classList.toggle('hidden');
+        }
+
+        navLoginBtn.addEventListener('click', toggleModal);
+        closeModalBtn.addEventListener('click', toggleModal);
+
+        // Close on outside click
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
+                toggleModal();
+            }
+        });
+    </script>
+</body>
+</html>
