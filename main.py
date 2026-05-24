@@ -11,7 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from datetime import date
-from database import get_db, User, UsageLog
+from database import get_db, User, UsageLog, CodeReviewHistory
+import json
 from auth import router as auth_router
 
 from pydantic import ValidationError
@@ -62,17 +63,8 @@ async def startup_event():
 # Frontend Dashboard Routes
 # ---------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-async def serve_landing():
-    """Serves the main landing.html"""
-    html_path = os.path.join(os.path.dirname(__file__), "landing.html")
-    if not os.path.exists(html_path):
-        raise HTTPException(status_code=404, detail="landing.html not found")
-    with open(html_path, "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
-
-@app.get("/dashboard", response_class=HTMLResponse)
 async def serve_dashboard():
-    """Serves the frontend dashboard index.html"""
+    """Serves the main frontend dashboard.html"""
     html_path = os.path.join(os.path.dirname(__file__), "dashboard.html")
     if not os.path.exists(html_path):
         raise HTTPException(status_code=404, detail="dashboard.html not found")
@@ -92,8 +84,31 @@ async def manual_review(request: Request, db: Session = Depends(get_db)):
 
     code_diff = payload.get("code_diff", "").strip()
     username = payload.get("username")
+    language = payload.get("language")
+
+    if not language:
+        raise HTTPException(status_code=400, detail="Programming language must be selected")
+
     if not code_diff:
         raise HTTPException(status_code=400, detail="code_diff cannot be empty")
+
+    def validate_language(lang: str, code: str) -> bool:
+        if lang == "Python":
+            if ('public class' in code or 'const ' in code) and 'def ' not in code:
+                return False
+        elif lang == "Java":
+            if ('def ' in code or 'console.log' in code) and 'public class' not in code and 'System.out.' not in code:
+                return False
+        elif "JavaScript" in lang:
+            if ('def ' in code or 'public class' in code) and 'function' not in code and 'const ' not in code:
+                return False
+        return True
+
+    if not validate_language(language, code_diff):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Validation Error: The code content provided does not match your selected language ({language}). Please verify your syntax or select the correct language option."
+        )
 
     line_count = len(code_diff.splitlines())
 
@@ -129,11 +144,43 @@ async def manual_review(request: Request, db: Session = Depends(get_db)):
     try:
         # Run the AI review asynchronously
         review_result = await analyze_code_diff("Manual Dashboard Submission", code_diff)
+        
+        # Save history to DB
+        history_record = CodeReviewHistory(
+            user_id=user.id if username and user else None,
+            input_code=code_diff,
+            summary=review_result.summary,
+            issues_json=json.dumps([issue.model_dump() for issue in review_result.issues])
+        )
+        db.add(history_record)
+        db.commit()
+
         return {"status": "success", "review": review_result.model_dump()}
     except Exception as e:
         # Return a safe 400 JSON response so the frontend can display the actual error string
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=400, content={"detail": str(e), "error": str(e)})
+
+@app.get("/api/reviews/history")
+async def get_review_history(db: Session = Depends(get_db)):
+    """Fetches the 20 most recent reviews."""
+    history = db.query(CodeReviewHistory).order_by(CodeReviewHistory.timestamp.desc()).limit(20).all()
+    results = []
+    for record in history:
+        issues = []
+        if record.issues_json:
+            try:
+                issues = json.loads(record.issues_json)
+            except Exception:
+                pass
+        results.append({
+            "id": record.id,
+            "timestamp": record.timestamp.isoformat() if record.timestamp else None,
+            "summary": record.summary,
+            "input_code": record.input_code,
+            "issues": issues
+        })
+    return {"status": "success", "history": results}
 
 # ---------------------------------------------------------
 # Webhook Handling Logic

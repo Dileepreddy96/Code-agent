@@ -47,10 +47,10 @@
             <h1 class="text-xl font-bold tracking-tight">CodeAgent</h1>
         </div>
         <nav class="flex-1 py-6 px-4 space-y-2">
-            <a href="#" class="flex items-center gap-3 bg-primary/20 text-blue-400 px-4 py-3 rounded-lg font-medium transition-colors">
+            <a href="#" id="navManualReview" class="flex items-center gap-3 bg-primary/20 text-blue-400 px-4 py-3 rounded-lg font-medium transition-colors">
                 <i class="fa-solid fa-code"></i> Manual Review
             </a>
-            <a href="#" class="flex items-center gap-3 hover:bg-slate-800 px-4 py-3 rounded-lg font-medium transition-colors text-slate-300">
+            <a href="#" id="navRecentReviews" class="flex items-center gap-3 hover:bg-slate-800 px-4 py-3 rounded-lg font-medium transition-colors text-slate-300">
                 <i class="fa-solid fa-clock-rotate-left"></i> Recent Reviews
             </a>
             <a href="#" class="flex items-center gap-3 hover:bg-slate-800 px-4 py-3 rounded-lg font-medium transition-colors text-slate-300">
@@ -65,14 +65,8 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-y-auto">
         <header class="bg-white shadow-sm px-8 py-5 flex items-center justify-between">
-            <h2 class="text-2xl font-bold text-slate-800">New Manual Review</h2>
+            <h2 class="text-2xl font-bold text-slate-800">Code Analysis</h2>
             <div class="flex items-center gap-4">
-                <select id="userStateSelect" class="bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 outline-none">
-                    <option value="">Anonymous (Max 50 lines)</option>
-                    <option value="test_trial">Trial User (5/day)</option>
-                    <option value="test_basic">Basic User (50/day)</option>
-                    <option value="test_pro">Pro User (Unlimited)</option>
-                </select>
                 <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
                     U
                 </div>
@@ -81,12 +75,23 @@
 
         <div class="p-8 max-w-5xl mx-auto w-full space-y-8 pb-20">
             
-            <!-- Input Section -->
+            <!-- Manual Review View -->
+            <div id="manualViewContainer" class="space-y-8">
+                <!-- Input Section -->
             <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="mb-4">
-                    <label for="codeDiff" class="block text-sm font-semibold text-slate-700 mb-2">Paste Code Diff</label>
-                    <p class="text-sm text-slate-500 mb-4">Paste your raw Git diff or specific code snippet below for the AI to analyze.</p>
-                    <textarea id="codeDiff" rows="12" class="w-full font-mono text-sm p-4 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-y" placeholder="+ def example():&#10;+     print('Hello world!')"></textarea>
+                <div class="mb-4 flex flex-col items-start gap-2">
+                    <div class="flex items-center gap-3">
+                        <label for="languageSelect" class="text-sm font-semibold text-slate-700"><i class="fa-solid fa-code text-primary mr-1"></i> Language:</label>
+                        <select id="languageSelect" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-48 py-1.5 px-3 outline-none transition-all cursor-pointer">
+                            <option value="Python" selected>Python</option>
+                            <option value="JavaScript">JavaScript / TypeScript</option>
+                            <option value="Java">Java</option>
+                            <option value="C++">C++</option>
+                            <option value="Go">Go</option>
+                            <option value="Ruby">Ruby</option>
+                        </select>
+                    </div>
+                    <textarea id="codeDiff" rows="12" class="w-full font-mono text-sm p-4 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-y mt-2" placeholder="Paste your code snippet or repository Git diff here to initiate analysis..."></textarea>
                 </div>
                 <div class="flex justify-end">
                     <button id="analyzeBtn" class="bg-primary hover:bg-blue-600 text-white font-medium py-2.5 px-6 rounded-lg shadow-sm transition-all flex items-center gap-2">
@@ -124,6 +129,24 @@
                 </div>
                 <p id="errorMessage" class="text-sm">An error occurred while processing the request.</p>
             </section>
+            </div> <!-- End manualViewContainer -->
+
+            <!-- History View -->
+            <div id="historyViewContainer" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-clock-rotate-left text-primary mr-2"></i> Recent Reviews History</h2>
+                    <p class="text-slate-500 text-sm mt-1">Review your previously analyzed code snippets and access full reports.</p>
+                </div>
+                
+                <div id="historyLoadingState" class="hidden flex-col items-center justify-center py-12 space-y-4">
+                    <div class="spinner"></div>
+                    <p class="text-slate-600 font-medium animate-pulse">Loading history...</p>
+                </div>
+                
+                <div id="historyList" class="space-y-4">
+                    <!-- History cards dynamically injected here -->
+                </div>
+            </div>
 
         </div>
     </main>
@@ -139,9 +162,104 @@
         const issueCount = document.getElementById('issueCount');
         const issuesList = document.getElementById('issuesList');
 
+        const navManualReview = document.getElementById('navManualReview');
+        const navRecentReviews = document.getElementById('navRecentReviews');
+        const manualViewContainer = document.getElementById('manualViewContainer');
+        const historyViewContainer = document.getElementById('historyViewContainer');
+        const historyList = document.getElementById('historyList');
+        const historyLoadingState = document.getElementById('historyLoadingState');
+
+        navManualReview.addEventListener('click', (e) => {
+            e.preventDefault();
+            manualViewContainer.classList.remove('hidden');
+            historyViewContainer.classList.add('hidden');
+            navManualReview.classList.add('bg-primary/20', 'text-blue-400');
+            navManualReview.classList.remove('hover:bg-slate-800', 'text-slate-300');
+            navRecentReviews.classList.remove('bg-primary/20', 'text-blue-400');
+            navRecentReviews.classList.add('hover:bg-slate-800', 'text-slate-300');
+        });
+
+        navRecentReviews.addEventListener('click', async (e) => {
+            e.preventDefault();
+            manualViewContainer.classList.add('hidden');
+            historyViewContainer.classList.remove('hidden');
+            navRecentReviews.classList.add('bg-primary/20', 'text-blue-400');
+            navRecentReviews.classList.remove('hover:bg-slate-800', 'text-slate-300');
+            navManualReview.classList.remove('bg-primary/20', 'text-blue-400');
+            navManualReview.classList.add('hover:bg-slate-800', 'text-slate-300');
+
+            await fetchHistory();
+        });
+
+        async function fetchHistory() {
+            historyList.innerHTML = '';
+            historyLoadingState.classList.remove('hidden');
+            try {
+                const res = await fetch('/api/reviews/history');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    renderHistory(data.history);
+                }
+            } catch (err) {
+                console.error(err);
+                historyList.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">Failed to load history. Make sure the server is running.</div>`;
+            } finally {
+                historyLoadingState.classList.add('hidden');
+            }
+        }
+
+        function renderHistory(history) {
+            if (history.length === 0) {
+                historyList.innerHTML = `<div class="text-slate-500 text-center py-8">No recent reviews found in the database.</div>`;
+                return;
+            }
+
+            history.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4 hover:shadow-md transition-shadow';
+                
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Unknown Time';
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 mb-2 tracking-wider uppercase"><i class="fa-regular fa-clock"></i> ${dateStr}</p>
+                            <h4 class="font-bold text-slate-800 text-lg leading-snug">${item.summary || 'No summary generated'}</h4>
+                        </div>
+                        <span class="bg-blue-50 text-primary border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-sm">${item.issues ? item.issues.length : 0} Issues Found</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 font-mono text-sm text-slate-600 line-clamp-3 overflow-hidden text-ellipsis shadow-inner">
+                        ${escapeHtml(item.input_code || 'No code provided')}
+                    </div>
+                    <div class="flex justify-end mt-2">
+                        <button class="view-report-btn bg-slate-800 hover:bg-slate-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-all flex items-center gap-2 text-sm">
+                            View Full Report <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `;
+                
+                card.querySelector('.view-report-btn').addEventListener('click', () => {
+                    // Switch back to manual view and render results
+                    navManualReview.click();
+                    codeDiffInput.value = item.input_code || '';
+                    resultsView.classList.add('hidden');
+                    errorState.classList.add('hidden');
+                    loadingState.classList.add('hidden');
+                    renderResults({ summary: item.summary, issues: item.issues || [] });
+                });
+
+                historyList.appendChild(card);
+            });
+        }
+
         analyzeBtn.addEventListener('click', async () => {
             const code = codeDiffInput.value.trim();
-            const username = document.getElementById('userStateSelect').value;
+            const language = document.getElementById('languageSelect').value;
+
+            if (!language) {
+                alert("Please select a programming language first.");
+                return;
+            }
 
             if (!code) {
                 alert("Please paste a code diff first.");
@@ -160,7 +278,7 @@
                 const response = await fetch('/api/review', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code_diff: code, username: username })
+                    body: JSON.stringify({ code_diff: code, username: null, language: language })
                 });
 
                 const data = await response.json();
